@@ -2,6 +2,7 @@
 
 namespace Viny;
 
+use Doctrine\DBAL\Platforms\MySQL80Platform;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 
@@ -38,7 +39,7 @@ class PointType extends Type
             return null;
         }
 
-        list($latitude, $longitude) = sscanf($value, 'POINT(%f %f)');
+        [$latitude, $longitude] = sscanf($value, 'POINT(%f %f)');
 
         return new Point($latitude, $longitude);
     }
@@ -82,6 +83,12 @@ class PointType extends Type
      */
     public function convertToDatabaseValueSQL($sqlExpr, AbstractPlatform $platform): string
     {
-        return sprintf('PointFromText(%s)', $sqlExpr);
+        if ($platform instanceof MySQL80Platform) {
+            $functionName = 'ST_PointFromText';
+        } else {
+            $functionName = 'PointFromText';
+        }
+
+        return sprintf('%s(%s)', $functionName, $sqlExpr);
     }
 }
