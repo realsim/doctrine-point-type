@@ -73,7 +73,13 @@ class PointType extends Type
      */
     public function convertToPHPValueSQL($value, $platform): string
     {
-        return sprintf('AsText(%s)', $value);
+        if ($platform instanceof MySQL80Platform) {
+            $functionName = 'ST_AsText';
+        } else {
+            $functionName = 'AsText';
+        }
+
+        return sprintf('%s(%s)', $functionName, $value);
     }
 
     /**
