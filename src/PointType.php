@@ -39,9 +39,21 @@ class PointType extends Type
             return null;
         }
 
-        [$latitude, $longitude] = sscanf($value, 'POINT(%f %f)');
+        if (false !== strpos($value, 'POINT')) {
+            [$latitude, $longitude] = sscanf($value, 'POINT(%f %f)');
+        } else {
+            // Parse binary format (WKB)
+            [$latitude, $longitude] = $this->parsePointWKB($value);
+        }
 
         return new Point($latitude, $longitude);
+    }
+
+    private function parsePointWKB($value): array
+    {
+        $data = \unpack('x4/corder/Ltype/dlatitude/dlongitude', $value);
+
+        return [$data['latitude'], $data['longitude']];
     }
 
     /**
